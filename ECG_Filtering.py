@@ -20,6 +20,13 @@ ecg_noisy = record.p_signal[:, 0]
 fs = record.fs
 t = np.arange(len(ecg_noisy)) / fs
 
+# Add noise to real ECG
+noise_record = wfdb.rdrecord('em', pn_dir='nstdb')
+noise = noise_record.p_signal[:, 0]
+noise = noise[:len(ecg_noisy)] # Ensure noise is the same length as ECG
+noise /= np.std(noise) # Normalize noise
+ecg_noisy += 0.5 * noise # Add noise to ECG
+
 # Notch filter
 b1, a1 = signal.iirnotch(f0, Q=30, fs=fs)
 
@@ -64,6 +71,7 @@ plt.show()
 
 # Plotting Filtered ECG with detected R-peaks
 plt.figure()
+plt.plot(t, ecg_noisy, label='Noisy ECG')
 plt.plot(t, ecg_filtered, label='Filtered ECG')
 plt.plot(t[peaks], ecg_filtered[peaks], 'ro', label='R-peaks')
 plt.xlabel('Time [s]')
